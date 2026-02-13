@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Código → Carta Real</title>
+
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      display: grid;
+      place-items: center;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+
+      /* Fondo horizontal (PC) */
+      background-image: url("fondo-horizontal.jpg");
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+
+    /* Fondo vertical (celular) */
+    @media (max-width: 768px) {
+      body {
+        background-image: url("fondo-vertical.jpg");
+      }
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(
+        circle at center,
+        rgba(0,0,0,0.15) 0%,
+        rgba(0,0,0,0.35) 60%,
+        rgba(0,0,0,0.60) 100%
+      );
+      pointer-events: none;
+    }
+
+    .card {
+      position: relative;
+      z-index: 2;
+      width: min(92vw, 420px);
+      padding: 22px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.90);
+      box-shadow: 0 16px 50px rgba(0,0,0,0.35);
+      text-align: center;
+      backdrop-filter: blur(6px);
+    }
+
+    h1 {
+      margin: 0 0 8px 0;
+      font-size: 20px;
+      letter-spacing: 0.3px;
+    }
+
+    p {
+      margin: 0 0 14px 0;
+      font-size: 13px;
+      color: rgba(0,0,0,0.70);
+    }
+
+    .codeInput {
+      width: 100%;
+      padding: 14px 14px;
+      font-size: 18px;
+      border-radius: 12px;
+      border: 1px solid rgba(0,0,0,0.15);
+      outline: none;
+      text-align: center;
+      letter-spacing: 2px;
+      box-sizing: border-box;
+    }
+
+    .status {
+      margin-top: 12px;
+      font-size: 13px;
+      min-height: 18px;
+    }
+
+    .ok { color: #0a7a2f; }
+    .bad { color: #b00020; }
+
+    .hint {
+      margin-top: 14px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.85);
+      text-shadow: 0 2px 10px rgba(0,0,0,0.45);
+      z-index: 2;
+      position: relative;
+    }
+
+    .levitate {
+      animation: levitate 2.6s ease-in-out infinite;
+    }
+
+    @keyframes levitate {
+      0%   { transform: translateY(0px); }
+      50%  { transform: translateY(-8px); }
+      100% { transform: translateY(0px); }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="overlay"></div>
+
+  <!-- Música: sube tu archivo como "musica.mp3" -->
+  <audio id="bgm" src="musica.mp3" loop></audio>
+
+  <div class="card levitate">
+    <h1>Ingresa el código</h1>
+    <p>Cuando sea correcto, se descargará tu carta ✨</p>
+
+    <input
+      id="code"
+      class="codeInput"
+      type="text"
+      placeholder="ESCRIBE AQUÍ"
+      autocomplete="off"
+      inputmode="text"
+    />
+
+    <div id="status" class="status"></div>
+  </div>
+
+  <div class="hint">Tip: toca la pantalla para activar la música 🎵</div>
+
+  <script>
+    // ✅ CAMBIA ESTE CÓDIGO por el tuyo
+    const CODIGO_CORRECTO = "AMOR2026";
+
+    // ✅ Nombre exacto del PDF a descargar (sube el PDF con este nombre)
+    const PDF_FILE = "carta-real.pdf";
+
+    const bgm = document.getElementById("bgm");
+    const input = document.getElementById("code");
+    const statusEl = document.getElementById("status");
+
+    // Inicia música al primer toque/clic (requisito en móviles)
+    function startMusic() {
+      if (bgm.paused) {
+        bgm.volume = 0.6;
+        bgm.play().catch(() => {});
+      }
+    }
+    document.addEventListener("click", startMusic, { once: true });
+    document.addEventListener("touchstart", startMusic, { once: true });
+
+    // Descargar PDF automáticamente
+    function descargarPDF() {
+      const a = document.createElement("a");
+      a.href = PDF_FILE;
+      a.download = PDF_FILE; // fuerza descarga (a veces abre en móvil)
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+
+    // Validación en vivo
+    input.addEventListener("input", () => {
+      const texto = input.value.trim();
+
+      // Si está vacío, limpia estado
+      if (!texto) {
+        statusEl.textContent = "";
+        statusEl.className = "status";
+        return;
+      }
+
+      if (texto.toUpperCase() === CODIGO_CORRECTO.toUpperCase()) {
+        statusEl.textContent = "✅ Código correcto. Descargando...";
+        statusEl.className = "status ok";
+        input.disabled = true;
+
+        // Pequeña pausa para que se lea el mensaje
+        setTimeout(descargarPDF, 500);
+      } else {
+        statusEl.textContent = "❌ Código incorrecto";
+        statusEl.className = "status bad";
+      }
+    });
+  </script>
+</body>
+</html>
