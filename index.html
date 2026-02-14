@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Código → Carta Real</title>
 
   <style>
@@ -21,76 +21,129 @@
     }
 
     @media (max-width: 768px) {
-      body {
-        background-image: url("fondo-vertical.jpg");
-      }
+      body { background-image: url("fondo-vertical.jpg"); }
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at center,
+        rgba(0,0,0,0.10) 0%,
+        rgba(0,0,0,0.35) 60%,
+        rgba(0,0,0,0.60) 100%);
+      pointer-events: none;
     }
 
     .card {
-      background: rgba(255,255,255,0.9);
-      padding: 25px;
+      position: relative;
+      z-index: 2;
+      width: min(92vw, 420px);
+      padding: 22px;
       border-radius: 18px;
+      background: rgba(255,255,255,0.90);
+      box-shadow: 0 16px 50px rgba(0,0,0,0.35);
       text-align: center;
-      box-shadow: 0 15px 40px rgba(0,0,0,0.35);
-      animation: levitate 3s ease-in-out infinite;
+      backdrop-filter: blur(6px);
+      animation: levitate 2.8s ease-in-out infinite;
     }
 
+    h2 { margin: 0 0 10px 0; font-size: 20px; }
+
     input {
-      padding: 12px;
-      font-size: 18px;
-      border-radius: 10px;
-      border: 1px solid #ccc;
-      text-align: center;
       width: 100%;
-      margin-top: 10px;
+      padding: 14px;
+      font-size: 18px;
+      border-radius: 12px;
+      border: 1px solid rgba(0,0,0,0.15);
+      outline: none;
+      text-align: center;
+      letter-spacing: 2px;
+      box-sizing: border-box;
     }
 
     .status {
-      margin-top: 10px;
+      margin-top: 12px;
       font-size: 14px;
+      min-height: 18px;
+    }
+
+    .hint {
+      margin-top: 10px;
+      font-size: 12px;
+      color: rgba(0,0,0,0.55);
     }
 
     @keyframes levitate {
-      0% { transform: translateY(0px); }
-      50% { transform: translateY(-8px); }
+      0%   { transform: translateY(0px); }
+      50%  { transform: translateY(-8px); }
       100% { transform: translateY(0px); }
     }
   </style>
 </head>
 
 <body>
+  <div class="overlay"></div>
 
-<audio autoplay loop>
-  <source src="musica.mp3" type="audio/mpeg">
-</audio>
+  <!-- Música -->
+  <audio id="bgm" src="musica.mp3" loop></audio>
 
-<div class="card">
-  <h2>Ingresa el código</h2>
-  <input id="code" placeholder="7134">
-  <div id="status" class="status"></div>
-</div>
+  <div class="card">
+    <h2>Ingresa el código</h2>
+    <input id="code" placeholder="7134" inputmode="numeric" />
+    <div id="status" class="status"></div>
+    <div class="hint">Si no suena, toca la pantalla una vez 🎵</div>
+  </div>
 
-<script>
-  const CODIGO_CORRECTO = "7134";
-  const ARCHIVO = "carta-real.jpg";
+  <script>
+    const CODIGO_CORRECTO = "7134";
+    const ARCHIVO = "carta-real.jpg";
 
-  const input = document.getElementById("code");
-  const statusEl = document.getElementById("status");
+    const bgm = document.getElementById("bgm");
+    const input = document.getElementById("code");
+    const statusEl = document.getElementById("status");
 
-  function descargarArchivo() {
-    const a = document.createElement("a");
-    a.href = ARCHIVO;
-    a.download = ARCHIVO;
-    a.click();
-  }
+    // 1) Intento automático al abrir (en muchos móviles se bloquea)
+    window.addEventListener("load", () => {
+      bgm.volume = 0.6;
+      bgm.play().catch(() => {
+        // si se bloquea, no pasa nada, lo activamos con el primer toque
+      });
+    });
 
-  input.addEventListener("input", () => {
-    if (input.value === CODIGO_CORRECTO) {
-      statusEl.textContent = "Descargando carta...";
-      descargarArchivo();
+    // 2) Primer toque/clic desbloquea audio (esto sí funciona en móvil)
+    function startMusic() {
+      bgm.volume = 0.6;
+      bgm.play().catch(() => {});
     }
-  });
-</script>
+    document.addEventListener("click", startMusic, { once: true });
+    document.addEventListener("touchstart", startMusic, { once: true });
 
+    // Descargar la carta (JPG)
+    function descargarArchivo() {
+      const a = document.createElement("a");
+      a.href = ARCHIVO;
+      a.download = ARCHIVO;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+
+    input.addEventListener("input", () => {
+      const valor = input.value.trim();
+
+      if (!valor) {
+        statusEl.textContent = "";
+        return;
+      }
+
+      if (valor === CODIGO_CORRECTO) {
+        statusEl.textContent = "✅ Código correcto. Descargando...";
+        input.disabled = true;
+        setTimeout(descargarArchivo, 300);
+      } else {
+        statusEl.textContent = "❌ Código incorrecto";
+      }
+    });
+  </script>
 </body>
 </html>
