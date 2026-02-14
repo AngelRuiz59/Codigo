@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Código → Carta Real</title>
 
   <style>
@@ -26,72 +26,119 @@
       }
     }
 
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(
+        circle at center,
+        rgba(0,0,0,0.10) 0%,
+        rgba(0,0,0,0.35) 60%,
+        rgba(0,0,0,0.60) 100%
+      );
+      pointer-events: none;
+    }
+
     .card {
-      background: rgba(255,255,255,0.9);
-      padding: 25px;
+      position: relative;
+      z-index: 2;
+      width: min(92vw, 420px);
+      padding: 22px;
       border-radius: 18px;
+      background: rgba(255,255,255,0.90);
+      box-shadow: 0 16px 50px rgba(0,0,0,0.35);
       text-align: center;
-      box-shadow: 0 15px 40px rgba(0,0,0,0.35);
-      animation: levitate 3s ease-in-out infinite;
+      backdrop-filter: blur(6px);
+      animation: levitate 2.8s ease-in-out infinite;
+    }
+
+    h2 {
+      margin: 0 0 10px 0;
+      font-size: 20px;
     }
 
     input {
-      padding: 12px;
-      font-size: 18px;
-      border-radius: 10px;
-      border: 1px solid #ccc;
-      text-align: center;
       width: 100%;
-      margin-top: 10px;
+      padding: 14px;
+      font-size: 18px;
+      border-radius: 12px;
+      border: 1px solid rgba(0,0,0,0.15);
+      outline: none;
+      text-align: center;
+      letter-spacing: 2px;
+      box-sizing: border-box;
     }
 
     .status {
-      margin-top: 10px;
+      margin-top: 12px;
       font-size: 14px;
+      min-height: 18px;
     }
 
+    .ok { color: #0a7a2f; }
+    .bad { color: #b00020; }
+
     @keyframes levitate {
-      0% { transform: translateY(0px); }
-      50% { transform: translateY(-8px); }
+      0%   { transform: translateY(0px); }
+      50%  { transform: translateY(-8px); }
       100% { transform: translateY(0px); }
     }
   </style>
 </head>
 
 <body>
+  <div class="overlay"></div>
 
-  <!-- Música -->
-  <audio id="bgm" autoplay loop>
-    <source src="musica.mp3" type="audio/mpeg">
-  </audio>
+  <!-- Música (autoplay puede bloquearse en iPhone; igual lo intentamos) -->
+  <audio id="bgm" src="musica.mp3" autoplay loop></audio>
 
   <div class="card">
     <h2>Ingresa el código</h2>
-    <input id="code" placeholder="Escribe el código">
+    <input id="code" placeholder="7134" inputmode="numeric" />
     <div id="status" class="status"></div>
   </div>
 
   <script>
-    const CODIGO_CORRECTO = "AMOR2026";
+    const CODIGO_CORRECTO = "7134";
     const PDF_FILE = "carta-real.pdf";
 
     const input = document.getElementById("code");
     const statusEl = document.getElementById("status");
 
+    // Intentar reproducir música al cargar (en algunos móviles se bloquea)
+    const bgm = document.getElementById("bgm");
+    window.addEventListener("load", () => {
+      bgm.volume = 0.6;
+      bgm.play().catch(() => {});
+    });
+
     function descargarPDF() {
       const a = document.createElement("a");
       a.href = PDF_FILE;
       a.download = PDF_FILE;
+      document.body.appendChild(a);
       a.click();
+      a.remove();
     }
 
     input.addEventListener("input", () => {
-      if (input.value.toUpperCase() === CODIGO_CORRECTO) {
-        statusEl.textContent = "Descargando carta...";
-        descargarPDF();
+      const valor = input.value.trim();
+
+      if (!valor) {
+        statusEl.textContent = "";
+        statusEl.className = "status";
+        return;
+      }
+
+      if (valor === CODIGO_CORRECTO) {
+        statusEl.textContent = "✅ Código correcto. Descargando...";
+        statusEl.className = "status ok";
+        input.disabled = true;
+        setTimeout(descargarPDF, 300);
+      } else {
+        statusEl.textContent = "❌ Código incorrecto";
+        statusEl.className = "status bad";
       }
     });
   </script>
-
 </body>
 </html>
